@@ -280,3 +280,9 @@ if __name__ == "__main__":
 # Om debug=True, kommer Flask att automatiskt ladda om vid ändringar
 # och visa detaljerade felmeddelanden.  # I produktion, sätt debug=False och använd en riktig server.
 # Flask kommer att lyssna på port 5000 som standard.                
+
+sads
+dddddddddddd
+ddddddddddd
+dddddddddddd
+ddddddddddddd
