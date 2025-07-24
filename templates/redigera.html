@@ -1,0 +1,57 @@
+<!DOCTYPE html>  <!-- Deklarerar HTML5-dokument -->
+<html lang="sv">  <!-- Anger svenska som språk -->
+<head>
+    <meta charset="UTF-8">  <!-- Teckenkodning UTF-8 -->
+    <title>Redigera uppgift</title>  <!-- Titel för sidan -->
+    <style>
+        /* Grundläggande styling (liknande andra sidor) */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        /* Styling för formulär */
+        .edit-form {
+            margin: 20px 0;
+        }
+        .edit-form input {
+            padding: 8px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+        /* Styling för knappar */
+        .button {
+            padding: 8px 15px;
+            margin-right: 10px;
+            text-decoration: none;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        /* Spara-knapp */
+        .save-button {
+            background-color: #4CAF50;
+        }
+        /* Avbryt-knapp */
+        .cancel-button {
+            background-color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <!-- Rubrik -->
+    <h1>✏️ Redigera uppgift</h1>
+    
+    <!-- Redigeringsformulär -->
+    <form class="edit-form" action="{{ url_for('uppdatera_todo', id=todo.id) }}" method="post">
+        <!-- Input för todo-text med befintligt värde -->
+        <input type="text" name="text" value="{{ todo.text }}" required>
+        
+        <!-- Knappar -->
+        <button class="button save-button" type="submit">Spara</button>
+        <a class="button cancel-button" href="{{ url_for('index') }}">Avbryt</a>
+    </form>
+</body>
+</html>

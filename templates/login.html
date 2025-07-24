@@ -1,0 +1,67 @@
+<!DOCTYPE html>  <!-- Deklarerar HTML5-dokument -->
+<html lang="sv">  <!-- Anger svenska som språk -->
+<head>
+    <meta charset="UTF-8">  <!-- Teckenkodning UTF-8 -->
+    <title>Logga in</title>  <!-- Titel för sidan -->
+    <style>
+        /* Grundläggande styling */
+        body {
+            font-family: Arial, sans-serif;  /* Typsnitt */
+            max-width: 500px;  /* Maxbredd */
+            margin: 0 auto;  /* Centrera horisontellt */
+            padding: 20px;  /* Utrymme runt innehåll */
+        }
+        /* Styling för formulärelement */
+        input, button {
+            padding: 8px;  /* Inre utfyllnad */
+            margin: 5px 0;  /* Marginaler */
+            width: 100%;  /* Full bredd */
+            box-sizing: border-box;  /* Inkludera padding i bredd */
+        }
+        /* Styling för knapp */
+        button {
+            background-color: #4CAF50;  /* Grön bakgrund */
+            color: white;  /* Vit text */
+            border: none;  /* Ingen ram */
+            cursor: pointer;  /* Pekarkursor */
+        }
+        /* Styling för meddelanden */
+        .flash-message {
+            color: red;  /* Röd text */
+            margin: 10px 0;  /* Marginaler */
+        }
+    </style>
+</head>
+<body>
+    <h1>Logga in</h1>  <!-- Rubrik nivå 1 -->
+    
+    <!-- Visa flash-meddelanden om det finns några -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="flash-message">
+                <!-- Loopa genom alla meddelanden -->
+                {% for message in messages %}
+                    {{ message }}  <!-- Visa meddelande -->
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Inloggningsformulär -->
+    <form action="{{ url_for('login') }}" method="post">
+        <!-- Användarnamnsfält -->
+        <label for="username">Användarnamn:</label>
+        <input type="text" id="username" name="username" required>
+        
+        <!-- Lösenordsfält -->
+        <label for="password">Lösenord:</label>
+        <input type="password" id="password" name="password" required>
+        
+        <!-- Skicka-knapp -->
+        <button type="submit">Logga in</button>
+    </form>
+    
+    <!-- Länk till registreringssida -->
+    <p>Har du inget konto? <a href="{{ url_for('register') }}">Registrera dig här</a>.</p>
+</body>
+</html>

@@ -1,0 +1,30 @@
+[
+  {
+    "id": "10cfde07-89b1-4f3d-8142-33907211698f",
+    "text": "dasdasd",
+    "klar": false,
+    "skapad": "2025-07-22T20:33:19.927696",
+    "prioritet": "hög"
+  },
+  {
+    "id": "1f9299a8-c410-4ee3-bfa6-ec84b0282043",
+    "text": "ssss",
+    "klar": false,
+    "skapad": "2025-07-22T20:33:25.054250",
+    "prioritet": "medel"
+  },
+  {
+    "id": "079f34b7-9a76-4e51-88f1-25a7fe72e127",
+    "text": "sssssssssss",
+    "klar": true,
+    "skapad": "2025-07-22T20:33:29.139743",
+    "prioritet": "låg"
+  },
+  {
+    "id": "4b31b57e-88c0-445e-858f-c60a08bfd59f",
+    "text": "aa",
+    "klar": false,
+    "skapad": "2025-07-22T20:33:31.516007",
+    "prioritet": "medel"
+  }
+]

@@ -1,0 +1,122 @@
+<!DOCTYPE html>  <!-- Deklarerar HTML5-dokument -->
+<html lang="sv">  <!-- Anger svenska som språk -->
+<head>
+    <meta charset="UTF-8">  <!-- Teckenkodning UTF-8 -->
+    <title>Min Todo-lista</title>  <!-- Titel som visas i webbläsarens flik -->
+
+    <!-- Intern CSS-stil -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;  /* Använd Arial som typsnitt */
+            max-width: 800px;  /* Begränsa sidans bredd */
+            margin: 0 auto;  /* Centrera innehållet på sidan */
+            padding: 20px;  /* Lägg till lite utrymme runt kanterna */
+        }
+
+        .todo-item {
+            margin: 10px 0;  /* Marginal ovanför och under */
+            padding: 10px;  /* Utrymme inuti rutan */
+            border: 1px solid #ddd;  /* Ljusgrå ram */
+            border-radius: 5px;  /* Rundade hörn */
+        }
+
+        .klar {
+            text-decoration: line-through;  /* Genomstruken text */
+            color: #888;  /* Grå färg */
+        }
+
+        .prioritet-hög { color: red; font-weight: bold; }  /* Hög prioritet – röd och fet */
+        .prioritet-medel { color: orange; }  /* Medel prioritet – orange */
+        .prioritet-låg { color: green; }  /* Låg prioritet – grön */
+
+        .action-icon {
+            margin-left: 10px;  /* Utrymme till vänster om ikonerna */
+            text-decoration: none;  /* Ingen understrykning på länkar */
+        }
+
+        .add-form {
+            margin: 20px 0;  /* Avstånd före och efter formuläret */
+        }
+
+        .add-form input, .add-form select {
+            padding: 8px;  /* Inre marginal i input/select */
+            margin-right: 5px;  /* Utrymme mellan fält och knapp */
+        }
+
+        .sort-options {
+            margin: 15px 0;  /* Marginal ovanför och under sortering */
+        }
+
+        .sort-options a {
+            margin: 0 5px;  /* Utrymme mellan sorteringslänkar */
+        }
+    </style>
+</head>
+<body>
+    <!-- Välkomstmeddelande, använder användarnamn från sessionen -->
+    <h1>📝 Min Todo-lista - Välkommen {{ session['användarnamn'] }}!</h1>  <!-- Hämtar användarnamnet från sessionen och visar det -->
+
+    <!-- Länk för att logga ut -->
+    <p><a href="{{ url_for('logout') }}">Logga ut</a></p>  <!-- Skapar en länk till logout-funktionen -->
+
+    <!-- Formulär för att lägga till ny todo-uppgift -->
+    <form class="add-form" action="{{ url_for('lägg_till') }}" method="post">
+        <input type="text" name="text" placeholder="Ny uppgift..." required>  <!-- Textfält för uppgiften -->
+        <select name="prioritet">  <!-- Välj prioritet -->
+            <option value="hög">Hög prioritet</option>  <!-- Hög -->
+            <option value="medel" selected>Medel prioritet</option>  <!-- Medel (förvald) -->
+            <option value="låg">Låg prioritet</option>  <!-- Låg -->
+        </select>
+        <button type="submit">Lägg till</button>  <!-- Skicka formuläret -->
+    </form>
+
+    <!-- Sorteringslänkar -->
+    <div class="sort-options">
+        Sortera:
+        {% if sortering == "nyast" %}
+            <strong>Nyast</strong> |  <!-- Visa fetstil om valt -->
+        {% else %}
+            <a href="{{ url_for('index', sortering='nyast') }}">Nyast</a> |  <!-- Annars länk -->
+        {% endif %}
+
+        {% if sortering == "äldst" %}
+            <strong>Äldst</strong> |  <!-- Visa fetstil om valt -->
+        {% else %}
+            <a href="{{ url_for('index', sortering='äldst') }}">Äldst</a> |  <!-- Annars länk -->
+        {% endif %}
+
+        {% if sortering == "prioritet" %}
+            <strong>Prioritet</strong>  <!-- Visa fetstil om valt -->
+        {% else %}
+            <a href="{{ url_for('index', sortering='prioritet') }}">Prioritet</a>  <!-- Annars länk -->
+        {% endif %}
+    </div>
+
+    <!-- Lista med uppgifter -->
+    <div class="todo-list">
+        {% for todo in todos %}  <!-- Loopa igenom alla uppgifter -->
+            <div class="todo-item">
+                <span class="{% if todo.klar %}klar{% endif %} prioritet-{{ todo.prioritet }}">  <!-- Lägg till klasser beroende på status och prioritet -->
+                    {{ todo.text }}  <!-- Visa själva uppgiftens text -->
+                </span>
+
+                <small> - {{ todo.skapad[:16].replace('T', ' ') }}</small>  <!-- Visa datum och tid (format: YYYY-MM-DD HH:MM) -->
+
+                {% if not todo.klar %}
+                    <!-- Länk för att markera som klar -->
+                    <a class="action-icon" href="{{ url_for('markera_klar', id=todo.id) }}" title="Markera som klar">✔️</a>
+                {% endif %}
+
+                <!-- Länk för att redigera uppgiften -->
+                <a class="action-icon" href="{{ url_for('redigera_sida', id=todo.id) }}" title="Redigera">✏️</a>
+
+                <!-- Länk för att ta bort uppgiften -->
+                <a class="action-icon" href="{{ url_for('ta_bort', id=todo.id) }}" title="Ta bort">🗑️</a>
+            </div>
+        {% else %}
+            <!-- Meddelande om inga uppgifter finns -->
+            <p>Inga uppgifter än. Lägg till en ovan!</p>
+        {% endfor %}
+    </div>
+</body>
+</html>

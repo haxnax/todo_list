@@ -1,0 +1,63 @@
+<!DOCTYPE html>  <!-- Deklarerar HTML5-dokument -->
+<html lang="sv">  <!-- Anger svenska som språk -->
+<head>
+    <meta charset="UTF-8">  <!-- Teckenkodning UTF-8 -->
+    <title>Registrera dig</title>  <!-- Titel för sidan -->
+    <style>
+        /* Grundläggande styling (samma som login) */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        input, button {
+            padding: 8px;
+            margin: 5px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .flash-message {
+            color: red;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Registrera nytt konto</h1>  <!-- Rubrik nivå 1 -->
+    
+    <!-- Visa flash-meddelanden -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="flash-message">
+                {% for message in messages %}
+                    {{ message }}
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Registreringsformulär -->
+    <form action="{{ url_for('register') }}" method="post">
+        <!-- Användarnamnsfält -->
+        <label for="username">Användarnamn:</label>
+        <input type="text" id="username" name="username" required>
+        
+        <!-- Lösenordsfält -->
+        <label for="password">Lösenord:</label>
+        <input type="password" id="password" name="password" required>
+        
+        <!-- Skicka-knapp -->
+        <button type="submit">Registrera</button>
+    </form>
+    
+    <!-- Länk till inloggningssida -->
+    <p>Har du redan ett konto? <a href="{{ url_for('login') }}">Logga in här</a>.</p>
+</body>
+</html>
