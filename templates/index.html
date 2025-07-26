@@ -177,6 +177,76 @@
             font-weight: bold;
             text-align: center;
         }
+
+        /* Mörkt läge - standardinställningar */
+        body.dark-mode {
+            background: #111827;
+            color: #e5e7eb;
+        }
+        body.dark-mode h1 {
+            color: #3b82f6;
+        }
+        body.dark-mode .todo-item {
+            background: #1f2937;
+            border: 1px solid #374151;
+        }
+        body.dark-mode .todo-item:hover {
+            background: #374151;
+        }
+        body.dark-mode .klar {
+            color: #9ca3af;
+        }
+        body.dark-mode .prioritet-hög {
+            color: #f87171;
+        }
+        body.dark-mode .prioritet-medel {
+            color: #fbbf24;
+        }
+        body.dark-mode .prioritet-låg {
+            color: #34d399;
+        }
+        body.dark-mode .action-icon {
+            color: #a5b4fc;
+        }
+        body.dark-mode .action-icon:hover {
+            color: #ef4444;
+        }
+        body.dark-mode .add-form input, body.dark-mode .add-form select {
+            background: #374151;
+            border: 1px solid #4b5563;
+            color: #e5e7eb;
+        }
+        body.dark-mode .add-form input:focus, body.dark-mode .add-form select:focus {
+            border: 1.5px solid #3b82f6;
+        }
+        body.dark-mode .add-form button {
+            background: #3b82f6;
+            color: #fff;
+        }
+        body.dark-mode .add-form button:hover {
+            background: #2563eb;
+        }
+        body.dark-mode .sort-options a {
+            color: #a5b4fc;
+        }
+        body.dark-mode .sort-options a:hover {
+            color: #2563eb;
+        }
+        body.dark-mode .sort-options strong {
+            color: #3b82f6;
+        }
+        body.dark-mode button {
+            background: #6366f1;
+            color: #fff;
+        }
+        body.dark-mode button:hover {
+            background: #3b82f6;
+        }
+        body.dark-mode .error-message {
+            background: #991b1b;
+            color: #fee2e2;
+            border: 1px solid #fca5a5;
+        }
     </style>
 </head>
 <body>
@@ -267,5 +337,28 @@
         {% endfor %}
       {% endif %}
     {% endwith %}
+
+    <script>
+        // Sätt tema vid sidladdning
+        document.addEventListener('DOMContentLoaded', function() {
+            if(localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                const btn = document.querySelector('.theme-toggle-btn');
+                if(btn) btn.textContent = 'Ljust läge';
+            }
+        });
+        // Funktion för att växla tema och spara valet
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const btn = document.querySelector('.theme-toggle-btn');
+            if(document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('theme', 'dark');
+                if(btn) btn.textContent = 'Ljust läge';
+            } else {
+                localStorage.setItem('theme', 'light');
+                if(btn) btn.textContent = 'Dark mode';
+            }
+        }
+    </script>
 </body>
 </html>
