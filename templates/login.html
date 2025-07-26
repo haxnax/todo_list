@@ -123,7 +123,7 @@
             padding: 8px 16px;
             cursor: pointer;
             font-weight: bold;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.4s;
         }
         .theme-toggle-btn:hover {
             background: #3b82f6;
@@ -132,6 +132,10 @@
             background: #18181b;
             color: #e5e7eb;
             border: 1px solid #52525b;
+        }
+        /* Rotationseffekt för tema-knappen */
+        .theme-toggle-btn.rotated {
+            transform: rotate(180deg);
         }
     </style>
 </head>
@@ -165,26 +169,28 @@
     </div>
     <!-- Script för att växla tema -->
     <script>
-        // Sätt tema vid sidladdning
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const btn = document.querySelector('.theme-toggle-btn');
+            btn.classList.toggle('rotated');
+            if(document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('theme', 'dark');
+                btn.textContent = 'Ljust läge';
+            } else {
+                localStorage.setItem('theme', 'light');
+                btn.textContent = 'Dark mode';
+            }
+        }
         document.addEventListener('DOMContentLoaded', function() {
             if(localStorage.getItem('theme') === 'dark') {
                 document.body.classList.add('dark-mode');
                 const btn = document.querySelector('.theme-toggle-btn');
-                if(btn) btn.textContent = 'Ljust läge';
+                if(btn) {
+                    btn.textContent = 'Ljust läge';
+                    btn.classList.add('rotated');
+                }
             }
         });
-        // Funktion för att växla tema och spara valet
-        function toggleTheme() {
-            document.body.classList.toggle('dark-mode');
-            const btn = document.querySelector('.theme-toggle-btn');
-            if(document.body.classList.contains('dark-mode')) {
-                localStorage.setItem('theme', 'dark');
-                if(btn) btn.textContent = 'Ljust läge';
-            } else {
-                localStorage.setItem('theme', 'light');
-                if(btn) btn.textContent = 'Dark mode';
-            }
-        }
     </script>
 </body>
 </html>
