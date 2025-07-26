@@ -6,62 +6,106 @@
     <style>
         /* Grundläggande styling */
         body {
-            font-family: Arial, sans-serif;  /* Typsnitt */
-            max-width: 500px;  /* Maxbredd */
-            margin: 0 auto;  /* Centrera horisontellt */
-            padding: 20px;  /* Utrymme runt innehåll */
+            font-family: 'Segoe UI', Arial, sans-serif;  /* Typsnitt */
+            background: linear-gradient(120deg, #e0e7ff 0%, #f8fafc 100%);  /* Bakgrundsgradient */
+            max-width: 400px;  /* Maxbredd */
+            margin: 80px auto;  /* Centrera horisontellt och ge toppmarginal */
+            padding: 32px;  /* Utrymme runt innehåll */
+            border-radius: 16px;  /* Rundade hörn */
+            box-shadow: 0 8px 32px rgba(60, 60, 120, 0.15);  /* Skugga */
+        }
+        /* Styling för inloggningsruta */
+        .login-box {
+            background: #fff;  /* Vit bakgrund */
+            border-radius: 12px;  /* Rundade hörn */
+            box-shadow: 0 2px 8px rgba(60, 60, 120, 0.07);  /* Skugga */
+            padding: 32px;  /* Utrymme runt innehåll */
+            text-align: center;  /* Centrera text */
+        }
+        /* Rubrik nivå 1 */
+        h1 {
+            color: #3b82f6;  /* Blå textfärg */
+            margin-bottom: 24px;  /* Marginal under rubrik */
         }
         /* Styling för formulärelement */
-        input, button {
-            padding: 8px;  /* Inre utfyllnad */
-            margin: 5px 0;  /* Marginaler */
-            width: 100%;  /* Full bredd */
-            box-sizing: border-box;  /* Inkludera padding i bredd */
+        .login-form input {
+            width: 90%;  /* 90% av förälderns bredd */
+            padding: 10px;  /* Inre utfyllnad */
+            margin: 10px 0;  /* Marginaler */
+            border-radius: 6px;  /* Rundade hörn */
+            border: 1px solid #cbd5e1;  /* Ljusgrå ram */
+            font-size: 1em;  /* Teckenstorlek */
+            outline: none;  /* Ingen kantlinje vid fokus */
+            transition: border 0.2s;  /* Övergångseffekt för ramfärg */
+        }
+        /* Fokus-effekt för inmatningsfält */
+        .login-form input:focus {
+            border: 1.5px solid #3b82f6;  /* Blå ram vid fokus */
         }
         /* Styling för knapp */
-        button {
-            background-color: #4CAF50;  /* Grön bakgrund */
-            color: white;  /* Vit text */
+        .login-form button {
+            width: 100%;  /* Full bredd */
+            padding: 10px 0;  /* Vertikal utfyllnad */
+            border-radius: 6px;  /* Rundade hörn */
             border: none;  /* Ingen ram */
+            background: #3b82f6;  /* Blå bakgrund */
+            color: #fff;  /* Vit text */
+            font-weight: bold;  /* Fet stil */
+            font-size: 1em;  /* Teckenstorlek */
             cursor: pointer;  /* Pekarkursor */
+            transition: background 0.2s;  /* Övergångseffekt för bakgrundsfärg */
+            margin-top: 12px;  /* Marginal ovanför knappen */
         }
-        /* Styling för meddelanden */
-        .flash-message {
-            color: red;  /* Röd text */
-            margin: 10px 0;  /* Marginaler */
+        /* Hover-effekt för knapp */
+        .login-form button:hover {
+            background: #2563eb;  /* Mörkare blå vid hover */
+        }
+        /* Styling för felmeddelanden */
+        .error-message {
+            color: #ef4444;  /* Röd textfärg */
+            margin-bottom: 12px;  /* Marginal under meddelande */
+        }
+        /* Styling för extra länkar */
+        .extra-links {
+            margin-top: 18px;  /* Marginal ovanför sektionen */
+            font-size: 0.98em;  /* Liten teckenstorlek */
+        }
+        .extra-links a {
+            color: #6366f1;  /* Länkfärg */
+            text-decoration: none;  /* Ingen understrykning */
+            margin: 0 8px;  /* Marginaler mellan länkar */
+        }
+        .extra-links a:hover {
+            text-decoration: underline;  /* Understrykning vid hover */
+            color: #2563eb;  /* Mörkare blå vid hover */
         }
     </style>
 </head>
 <body>
-    <h1>Logga in</h1>  <!-- Rubrik nivå 1 -->
-    
-    <!-- Visa flash-meddelanden om det finns några -->
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div class="flash-message">
-                <!-- Loopa genom alla meddelanden -->
-                {% for message in messages %}
-                    {{ message }}  <!-- Visa meddelande -->
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
-    
-    <!-- Inloggningsformulär -->
-    <form action="{{ url_for('login') }}" method="post">
-        <!-- Användarnamnsfält -->
-        <label for="username">Användarnamn:</label>
-        <input type="text" id="username" name="username" required>
-        
-        <!-- Lösenordsfält -->
-        <label for="password">Lösenord:</label>
-        <input type="password" id="password" name="password" required>
-        
-        <!-- Skicka-knapp -->
-        <button type="submit">Logga in</button>
-    </form>
-    
-    <!-- Länk till registreringssida -->
-    <p>Har du inget konto? <a href="{{ url_for('register') }}">Registrera dig här</a>.</p>
+    <div class="login-box">
+        <h1>Logga in</h1>
+        <!-- Visa felmeddelanden om det finns några -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="error-message">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        <!-- Inloggningsformulär -->
+        <form class="login-form" action="{{ url_for('login') }}" method="post">
+            <!-- Användarnamnsfält -->
+            <input type="text" name="username" placeholder="Användarnamn" required>
+            <!-- Lösenordsfält -->
+            <input type="password" name="password" placeholder="Lösenord" required>
+            <!-- Skicka-knapp -->
+            <button type="submit">Logga in</button>
+        </form>
+        <!-- Extra länkar för återställning av lösenord och registrering -->
+        <div class="extra-links">
+            <a href="{{ url_for('reset_password') }}">Glömt lösenord?</a>
+            <a href="{{ url_for('register') }}">Registrera</a>
+        </div>
+    </div>
 </body>
 </html>

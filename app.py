@@ -61,6 +61,16 @@ def load_user(user_id):
 def inject_user():
     return dict(current_user=current_user)
 
+@app.route('/profil')
+@login_required
+def profil():
+    antal_todos = Todo.query.filter_by(user_id=current_user.id).count()
+    return render_template('profil.html', 
+                         användare=current_user,
+                         antal_todos=antal_todos)
+
+
+
 # Route för registrering
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -71,6 +81,13 @@ def register():
         # Kontrollera om användarnamn redan finns
         if User.query.filter_by(username=username).first():
             flash('Användarnamnet finns redan')
+
+        elif len(password) < 8:
+            flash('Lösenordet måste vara minst 8 tecken')
+
+        elif not any(char.isdigit() for char in password):
+            flash('Lösenordet måste innehålla minst en siffra')
+
         else:
             # Skapa ny användare
             new_user = User(username=username)
@@ -201,6 +218,22 @@ def redigera_sida(id):
 def logout():
     logout_user()
     return redirect(url_for('login'))
+
+@app.route('/reset_password', methods=['GET', 'POST'])
+def reset_password():
+    felmeddelande = None
+    if request.method == 'POST':
+        username = request.form['username']
+        new_password = request.form['new_password']
+        user = User.query.filter_by(username=username).first()
+        if user:
+            user.set_password(new_password)
+            db.session.commit()
+            flash('Lösenordet är nu ändrat!', 'success')
+            return redirect(url_for('login'))
+        else:
+            felmeddelande = 'Användaren finns inte.'
+    return render_template('reset_password.html', felmeddelande=felmeddelande)
 
 if __name__ == '__main__':
     app.run(debug=True)
