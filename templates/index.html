@@ -100,7 +100,7 @@
                     {{ todo.text }}  <!-- Visa själva uppgiftens text -->
                 </span>
 
-                <small> - {{ todo.skapad[:16].replace('T', ' ') }}</small>  <!-- Visa datum och tid (format: YYYY-MM-DD HH:MM) -->
+                <small> - {{ todo.skapad.strftime('%Y-%m-%d %H:%M') }}</small>  <!-- Visa datum och tid (format: YYYY-MM-DD HH:MM) -->
 
                 {% if not todo.klar %}
                     <!-- Länk för att markera som klar -->

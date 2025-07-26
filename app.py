@@ -1,279 +1,206 @@
-# Importera nödvändiga Flask-moduler
 from flask import Flask, render_template, request, redirect, url_for, flash
-# Flask - huvudramverket
-# render_template - för att rendera HTML-mallar
-# request - för att hantera HTTP-förfrågningar
-# redirect - för att omdirigera användaren
-# url_for - för att generera URL:er
-# flash - för att visa meddelanden till användaren
-
-# Importera Flask-Login för användarhantering
+from flask_sqlalchemy import SQLAlchemy  # För databashantering
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-# LoginManager - huvudklass för inloggning
-# UserMixin - grundläggande användarimplementering
-# login_user - funktion för att logga in användare
-# login_required - dekorator för skyddade routes
-# logout_user - funktion för att logga ut
-# current_user - tillgång till inloggad användare
+from werkzeug.security import generate_password_hash, check_password_hash  # För säkra lösenord
+import datetime
+import uuid
 
-# Importera andra nödvändiga moduler
-import json  # För att arbeta med JSON-data
-import os    # För filsystemoperationer
-import uuid  # För att generera unika ID:n
-import datetime  # För datumhantering
-
-# Skapa Flask-applikationen
+# Skapa Flask-appen
 app = Flask(__name__)
-# __name__ talar om för Flask var appen finns
+app.secret_key = 'din_hemliga_nyckel'  # Byt ut i produktion!
 
-# Konfigurera en hemlig nyckel för sessionshantering
-app.secret_key = 'din_hemliga_nyckel'  # Byt ut detta i produktion!
+# Konfigurera databasen (SQLite)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///todo.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Skapa och initiera LoginManager
-login_manager = LoginManager()  # Skapar en instans av LoginManager
-login_manager.init_app(app)     # Kopplar den till vår Flask-app
-login_manager.login_view = 'login'  # Anger vilken route som hanterar inloggning
+# Initiera databasen
+db = SQLAlchemy(app)
 
-# Skapa en användarklass som ärver från UserMixin
-class User(UserMixin):
-    def __init__(self, id, username, password):
-        self.id = id           # Unikt användar-ID
-        self.username = username  # Användarnamn
-        self.password = password  # Lösenord (i verklig app, använd hashat lösenord)
+# Initiera Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
-# Simulerad databas med användare (ersätt med riktig databas i produktion)
-USERS = {
-    'admin': {'id': '1', 'password': 'admin'},      # Admin-användare
-    'user1': {'id': '2', 'password': 'password1'},  # Testanvändare 1
-    'user2': {'id': '3', 'password': 'password2'}   # Testanvändare 2
-}
+# Modell för användare
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128))
+    
+    # Relation till todos (en användare har många todos)
+    todos = db.relationship('Todo', backref='user', lazy=True)
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
-# Funktion som laddar en användare baserat på ID (krävs av Flask-Login)
+# Modell för todos
+class Todo(db.Model):
+    id = db.Column(db.String(36), primary_key=True)
+    text = db.Column(db.String(200), nullable=False)
+    klar = db.Column(db.Boolean, default=False)
+    skapad = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    prioritet = db.Column(db.String(10), default='medel')
+    
+    # Främmande nyckel till användaren
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+# Skapa tabellerna (körs bara en gång)
+with app.app_context():
+    db.create_all()
+
+# Funktion för att ladda användare (krävs av Flask-Login)
 @login_manager.user_loader
 def load_user(user_id):
-    # Loopa genom alla användare
-    for username, user_info in USERS.items():
-        # Kontrollera om ID matchar
-        if user_info['id'] == user_id:
-            # Returnera användarobjekt om matchning hittades
-            return User(id=user_info['id'], username=username, password=user_info['password'])
-    # Returnera None om ingen användare hittades
-    return None
+    return User.query.get(int(user_id))
 
-# Hjälpfunktion för att få filnamn baserat på användar-ID
-def get_user_todo_filename(user_id):
-    return f"todo_{user_id}.json"  # Skapar filnamn som todo_1.json etc.
+# Kontextprocessor för att göra current_user tillgänglig i mallar
+@app.context_processor
+def inject_user():
+    return dict(current_user=current_user)
 
-# Funktion för att läsa todos för en specifik användare
-def läs_todo(user_id):
-    # Skapa filnamn baserat på användar-ID
-    filnamn = get_user_todo_filename(user_id)
-    try:
-        # Kontrollera om filen finns
-        if os.path.exists(filnamn):
-            # Öppna filen för läsning
-            with open(filnamn, "r", encoding="utf-8") as f:
-                # Ladda och returnera JSON-data
-                return json.load(f)
-        # Returnera tom lista om filen inte finns
-        return []
-    except Exception as e:
-        # Skriv ut felmeddelande om något går fel
-        print(f"Fel vid läsning: {e}")
-        # Returnera tom lista vid fel
-        return []
-
-# Funktion för att spara todos för en specifik användare
-def spara_todo(todo_list, user_id):
-    # Skapa filnamn baserat på användar-ID
-    filnamn = get_user_todo_filename(user_id)
-    # Öppna filen för skrivning
-    with open(filnamn, "w", encoding="utf-8") as f:
-        # Spara todo-listan som JSON
-        json.dump(todo_list, f, ensure_ascii=False, indent=2)
-
-# Route för inloggning (både GET och POST)
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    # Hantera POST-förfrågan (när formulär skickas)
-    if request.method == 'POST':
-        # Hämta användarnamn från formuläret
-        username = request.form.get('username')
-        # Hämta lösenord från formuläret
-        password = request.form.get('password')
-        
-        # Kontrollera om användarnamn finns och lösenord stämmer
-        if username in USERS and USERS[username]['password'] == password:
-            # Skapa användarobjekt
-            user = User(id=USERS[username]['id'], username=username, password=password)
-            # Logga in användaren
-            login_user(user)
-            # Omdirigera till startsidan
-            return redirect(url_for('index'))
-        else:
-            # Visa felmeddelande om inloggning misslyckades
-            flash('Fel användarnamn eller lösenord')
-    # Rendera inloggningssidan för GET-förfrågan
-    return render_template('login.html')
-
-# Route för utloggning
-@app.route('/logout')
-@login_required  # Endast inloggade användare kan logga ut
-def logout():
-    # Logga ut användaren
-    logout_user()
-    # Omdirigera till inloggningssidan
-    return redirect(url_for('login'))
-
-# Route för registrering av ny användare
+# Route för registrering
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    # Hantera POST-förfrågan (när formulär skickas)
     if request.method == 'POST':
-        # Hämta användarnamn från formuläret
         username = request.form.get('username')
-        # Hämta lösenord från formuläret
         password = request.form.get('password')
         
         # Kontrollera om användarnamn redan finns
-        if username in USERS:
-            # Visa felmeddelande
+        if User.query.filter_by(username=username).first():
             flash('Användarnamnet finns redan')
         else:
-            # Skapa nytt användar-ID
-            new_id = str(len(USERS) + 1)
-            # Lägg till ny användare
-            USERS[username] = {'id': new_id, 'password': password}
-            # Visa bekräftelsemeddelande
+            # Skapa ny användare
+            new_user = User(username=username)
+            new_user.set_password(password)  # Hasha lösenordet
+            
+            # Spara till databasen
+            db.session.add(new_user)
+            db.session.commit()
+            
             flash('Konto skapat! Vänligen logga in.')
-            # Omdirigera till inloggningssidan
             return redirect(url_for('login'))
-    # Rendera registreringssidan för GET-förfrågan
+    
     return render_template('register.html')
 
-# Route för startsidan (kräver inloggning)
-@app.route("/")
-@login_required  # Skyddad route - endast inloggade användare
+# Route för inloggning
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        # Hämta användare från databasen
+        user = User.query.filter_by(username=username).first()
+        
+        # Kontrollera användare och lösenord
+        if user and user.check_password(password):
+            login_user(user)
+            return redirect(url_for('index'))
+        else:
+            flash('Fel användarnamn eller lösenord')
+    
+    return render_template('login.html')
+
+# Route för startsidan
+@app.route('/')
+@login_required
 def index():
-    # Hämta sorteringsparameter från URL, standard är "nyast"
-    sortering = request.args.get("sortering", "nyast")
-    # Läs aktuell användares todos
-    todo_list = läs_todo(current_user.id)
+    sortering = request.args.get('sortering', 'nyast')
+    
+    # Hämta aktuell användares todos
+    todos = Todo.query.filter_by(user_id=current_user.id)
+    
+    # Sortering
+    if sortering == 'nyast':
+        todos = todos.order_by(Todo.skapad.desc())
+    elif sortering == 'äldst':
+        todos = todos.order_by(Todo.skapad.asc())
+    elif sortering == 'prioritet':
+        # Anpassad sortering för prioritet
+        from sqlalchemy import case
+        priority_order = case(
+            {'hög': 1, 'medel': 2, 'låg': 3},
+            value=Todo.prioritet
+        )
+        todos = todos.order_by(priority_order)
+    
+    return render_template('index.html', todos=todos.all(), sortering=sortering)
 
-    # Hjälpfunktion för sortering
-    def få_tid(todo):
-        return todo.get("skapad", "")
-
-    # Sortera baserat på val
-    if sortering == "nyast":
-        todo_list.sort(key=få_tid, reverse=True)  # Nyast först
-    elif sortering == "äldst":
-        todo_list.sort(key=få_tid)  # Äldst först
-    elif sortering == "prioritet":
-        # Sortera efter prioritet (hög, medel, låg)
-        def prioritet_key(todo):
-            prioriteter = {"hög": 1, "medel": 2, "låg": 3}
-            return prioriteter.get(todo.get("prioritet", "medel"), 2)
-        todo_list.sort(key=prioritet_key)
-
-    # Rendera mallen med todos och sorteringsinfo
-    return render_template("index.html", todos=todo_list, sortering=sortering)
-
-# Route för att lägga till ny todo (kräver inloggning)
-@app.route("/lägg_till", methods=["POST"])
+# Route för att lägga till todo
+@app.route('/lägg_till', methods=['POST'])
 @login_required
 def lägg_till():
-    # Läs aktuell användares todos
-    todo_list = läs_todo(current_user.id)
-    # Hämta text från formuläret
-    text = request.form.get("text")
-    # Hämta prioritet från formuläret, standard är "medel"
-    prioritet = request.form.get("prioritet", "medel")
-
-    # Kontrollera att text inte är tom
+    text = request.form.get('text')
+    prioritet = request.form.get('prioritet', 'medel')
+    
     if text:
         # Skapa ny todo
-        ny_uppgift = {
-            "id": str(uuid.uuid4()),  # Generera unikt ID
-            "text": text,             # Uppgiftstext
-            "klar": False,            # Ej klar från början
-            "skapad": datetime.datetime.now().isoformat(),  # Nuvarande tid
-            "prioritet": prioritet    # Prioritet
-        }
-        # Lägg till i listan
-        todo_list.append(ny_uppgift)
-        # Spara listan
-        spara_todo(todo_list, current_user.id)
-    # Omdirigera till startsidan
-    return redirect("/")
- 
-# Route för att markera todo som klar (kräver inloggning)
-@app.route("/klar/<id>")
+        new_todo = Todo(
+            id=str(uuid.uuid4()),
+            text=text,
+            prioritet=prioritet,
+            user_id=current_user.id
+        )
+        
+        # Spara till databasen
+        db.session.add(new_todo)
+        db.session.commit()
+    
+    return redirect(url_for('index'))
+
+# Route för att markera todo som klar
+@app.route('/klar/<id>')
 @login_required
 def markera_klar(id):
-    # Läs aktuell användares todos
-    todo_list = läs_todo(current_user.id)
-    # Loopa genom todos
-    for todo in todo_list:
-        # Hitta todo med matchande ID
-        if todo.get("id") == id:
-            # Markera som klar
-            todo["klar"] = True
-            break
-    # Spara ändringar
-    spara_todo(todo_list, current_user.id)
-    # Omdirigera till startsidan
-    return redirect("/")
+    todo = Todo.query.get(id)
+    
+    # Kontrollera att todo finns och tillhör inloggad användare
+    if todo and todo.user_id == current_user.id:
+        todo.klar = True
+        db.session.commit()
+    
+    return redirect(url_for('index'))
 
-# Route för att ta bort todo (kräver inloggning)
-@app.route("/ta_bort/<id>")
+# Route för att ta bort todo
+@app.route('/ta_bort/<id>')
 @login_required
 def ta_bort(id):
-    # Läs aktuell användares todos
-    todo_list = läs_todo(current_user.id)
-    # Skapa ny lista utan todo med matchande ID
-    todo_list = [todo for todo in todo_list if todo.get("id") != id]
-    # Spara ändringar
-    spara_todo(todo_list, current_user.id)
-    # Omdirigera till startsidan
-    return redirect("/")
+    todo = Todo.query.get(id)
+    
+    # Kontrollera att todo finns och tillhör inloggad användare
+    if todo and todo.user_id == current_user.id:
+        db.session.delete(todo)
+        db.session.commit()
+    
+    return redirect(url_for('index'))
 
-# Route för att redigera todo (kräver inloggning)
-@app.route("/redigera/<id>")
+# Route för att redigera todo
+@app.route('/redigera/<id>', methods=['GET', 'POST'])
 @login_required
 def redigera_sida(id):
-    # Läs aktuell användares todos
-    todo_list = läs_todo(current_user.id)
-    # Hitta todo med matchande ID
-    todo = next((t for t in todo_list if t["id"] == id), None)
-    # Om inte hittad, omdirigera till startsidan
-    if not todo:
-        return redirect("/")
-    # Rendera redigeringssidan
-    return render_template("redigera.html", todo=todo)
+    todo = Todo.query.get(id)
+    
+    # Kontrollera att todo finns och tillhör inloggad användare
+    if not todo or todo.user_id != current_user.id:
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        ny_text = request.form.get('text')
+        if ny_text:
+            todo.text = ny_text
+            db.session.commit()
+            return redirect(url_for('index'))
+    
+    return render_template('redigera.html', todo=todo)
 
-# Route för att uppdatera todo (kräver inloggning)
-@app.route("/uppdatera/<id>", methods=["POST"])
+@app.route('/logout')
 @login_required
-def uppdatera_todo(id):
-    # Läs aktuell användares todos
-    todo_list = läs_todo(current_user.id)
-    # Loopa genom todos
-    for todo in todo_list:
-        # Hitta todo med matchande ID
-        if todo["id"] == id:
-            # Hämta ny text från formuläret
-            ny_text = request.form.get("text")
-            # Uppdatera om text finns
-            if ny_text:
-                todo["text"] = ny_text
-            break
-    # Spara ändringar
-    spara_todo(todo_list, current_user.id)
-    # Omdirigera till startsidan
-    return redirect("/")
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
 
-# Starta applikationen om filen körs direkt
-if __name__ == "__main__":
-    app.run(debug=True)  # Debug-läge för utveckling
-# alhamdulillah
+if __name__ == '__main__':
+    app.run(debug=True)
